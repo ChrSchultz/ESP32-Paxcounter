@@ -7,9 +7,8 @@
 static const char TAG[] = __FILE__;
 
 #define PAYLOADMASK                                                            \
-  ((GPS_DATA | ALARM_DATA | MEMS_DATA | COUNT_DATA | SENSOR1_DATA |            \
-    SENSOR2_DATA | SENSOR3_DATA) &                                             \
-   (~BATT_DATA))
+  ((GPS_DATA | ALARM_DATA | MEMS_DATA | COUNT_DATA) & (~SENSOR1_DATA)&           \
+    (~SENSOR2_DATA )& (~SENSOR3_DATA) |  BATT_DATA )
 
 // namespace for device runtime preferences
 #define DEVCONFIG "paxcntcfg"
@@ -122,6 +121,9 @@ bool loadConfig() {
   // copy loaded configuration into runtime cfg struct
   memcpy(&cfg, buffer, cfgLen);
   ESP_LOGI(TAG, "Runtime configuration v%s loaded", cfg.version);
+ESP_LOGD(TAG, "\tDatarate:    %d\n \tTXPower:     %d \n \tadrmode:    %d \n \tscreehsaver: %d \n \tScreenOn:    %d \n \tCountermode %d \n \tRSSI-Limit:  %d \n \tSendCycle:   %d \n \tWifiChanCycle: %d \n \tBLEScanTime: %d \n \tBLEScan:     %d \n \tWifiScan:    %d \n \tVendFilter:  %d \n \tRGBLumin:    %d \n \tMonitormode:  %d \n \tPayloadmask: %d \n \tEnsCount:   %d", cfg.loradr, cfg.txpower, cfg.adrmode, cfg.screensaver, cfg.screenon, cfg.countermode, cfg.rssilimit, cfg.sendcycle, cfg.wifichancycle, cfg.blescantime, cfg.blescan, cfg.wifiscan, cfg.vendorfilter, cfg.rgblum, cfg.monitormode, cfg.payloadmask, cfg.enscount);
+
+  
 
   // check if config version matches current firmware version
   switch (version_compare(PROGVERSION, cfg.version)) {

@@ -179,8 +179,8 @@ void PayloadConvert::addConfig(configData_t value) {
   writeBitmap(value.adrmode ? true : false, value.screensaver ? true : false,
               value.screenon ? true : false, value.countermode ? true : false,
               value.blescan ? true : false, value.wifiant ? true : false,
-              value.vendorfilter ? true : false,
-              value.monitormode ? true : false);
+              value.vendorfilter ? true : false, value.monitormode ? true : false);
+  writeUint8(value.enscount ? true: false );
   writeBitmap(value.payloadmask && GPS_DATA ? true : false,
               value.payloadmask && ALARM_DATA ? true : false,
               value.payloadmask && MEMS_DATA ? true : false,
@@ -189,6 +189,7 @@ void PayloadConvert::addConfig(configData_t value) {
               value.payloadmask && SENSOR2_DATA ? true : false,
               value.payloadmask && SENSOR3_DATA ? true : false,
               value.payloadmask && BATT_DATA ? true : false);
+  //writeUint8(value.payloadmask);
   writeVersion(value.version);
 }
 
@@ -310,6 +311,11 @@ void PayloadConvert::writeBitmap(bool a, bool b, bool c, bool d, bool e, bool f,
   bitmap |= (f & 1) << 2;
   bitmap |= (g & 1) << 1;
   bitmap |= (h & 1) << 0;
+  ESP_LOGD (TAG, "Bitmap: %d%d%d%d% %d%d%d%d%d", a,b,c,d,e,f,g,h,j);
+  bool j = false;
+  if(value.payloadmask && SENSOR1_DATA)
+     j = true;
+  
   writeUint8(bitmap);
 }
 
