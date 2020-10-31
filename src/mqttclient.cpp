@@ -23,7 +23,7 @@ esp_err_t mqtt_init(void) {
   mqttClient.begin(MQTT_SERVER, MQTT_PORT, netClient);
   mqttClient.onMessageAdvanced(mqtt_callback);
 
-  assert(SEND_QUEUE_SIZE);
+  _ASSERT(SEND_QUEUE_SIZE > 0);
   MQTTSendQueue = xQueueCreate(SEND_QUEUE_SIZE, sizeof(MessageBuffer_t));
   if (MQTTSendQueue == 0) {
     ESP_LOGE(TAG, "Could not create MQTT send queue. Aborting.");
@@ -124,7 +124,7 @@ void mqtt_client_task(void *param) {
     if (mqttClient.connected()) {
 
       char buffer[PAYLOAD_BUFFER_SIZE + 3];
-      snprintf(buffer, msg.MessageSize + 3, "%s/%u", msg.MessagePort,
+      snprintf(buffer, msg.MessageSize + 3, "%u/%s", msg.MessagePort,
                msg.Message);
 
       if (mqttClient.publish(MQTT_OUTTOPIC, buffer)) {
@@ -174,7 +174,7 @@ void mqtt_enqueuedata(MessageBuffer_t *message) {
 
 void mqtt_callback(MQTTClient *client, char topic[], char payload[],
                    int length) {
-  if (topic == MQTT_INTOPIC)
+  if (strcmp(topic, MQTT_INTOPIC) == 0)
     rcommand((const uint8_t *)payload, (const uint8_t)length);
 }
 
