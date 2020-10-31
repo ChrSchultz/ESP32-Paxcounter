@@ -54,7 +54,7 @@
 #define SDCARD_DATA3 13
 #endif
 
-#define SDCARD_FILE_NAME "/paxcount.%02d"
+#define SDCARD_FILE_NAME "/paxcount%02d.csv"
 #define SDCARD_FILE_HEADER "date, time, wifi, bluet"
 
 #if (COUNT_ENS)
