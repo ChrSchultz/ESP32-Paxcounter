@@ -20,7 +20,6 @@
 
 #define EXT_POWER_SW    15            // Switch VDD on pin JP10, needed for RTC DS3231
 #define EXT_POWER_ON    0
-#define EXT_POWER_OFF   1
 
 #define HAS_LED (2) // on board green LED
 #define HAS_TWO_LED (12) // on board red LED
@@ -38,7 +37,7 @@
 #define RTC_INT GPIO_NUM_0 //
 
 // Settings for IF482 interface
-#define HAS_IF482 9600, SERIAL_7E1, GPIO_NUM_3, GPIO_NUM_1 // RX, TX
+//#define HAS_IF482 9600, SERIAL_7E1, GPIO_NUM_3, GPIO_NUM_1 // RX, TX
 
 // Settings for DCF77 interface
 //#define HAS_DCF77 GPIO_NUM_14 // JP8 #13

@@ -7,12 +7,7 @@ static const char TAG[] = __FILE__;
 
 void i2c_init(void) { Wire.begin(MY_DISPLAY_SDA, MY_DISPLAY_SCL, 100000); }
 
-void i2c_deinit(void) {
-  Wire.~TwoWire(); // shutdown/power off I2C hardware
-  // configure pins as input to save power, because Wire.end() enables pullups
-  pinMode(MY_DISPLAY_SDA, INPUT);
-  pinMode(MY_DISPLAY_SCL, INPUT);
-}
+void i2c_deinit(void) { Wire.~TwoWire(); }
 
 void i2c_scan(void) {
 
@@ -38,10 +33,13 @@ void i2c_scan(void) {
 
   BBI2C bbi2c;
 
-  const char *szNames[]  = {"Unknown","SSD1306","SH1106","VL53L0X","BMP180", "BMP280","BME280",
-                "MPU-60x0", "MPU-9250", "MCP9808","LSM6DS3", "ADXL345", "ADS1115","MAX44009",
-                "MAG3110", "CCS811", "HTS221", "LPS25H", "LSM9DS1","LM8330", "DS3231", "LIS3DH",
-                "LIS3DSH","INA219","SHT3X","HDC1080","MPU6886","BME680", "AXP202", "AXP192", "24AA02XEXX", "DS1307"};
+  const char *szNames[] = {
+      "Unknown",    "SSD1306",  "SH1106",   "VL53L0X", "BMP180",  "BMP280",
+      "BME280",     "MPU-60x0", "MPU-9250", "MCP9808", "LSM6DS3", "ADXL345",
+      "ADS1115",    "MAX44009", "MAG3110",  "CCS811",  "HTS221",  "LPS25H",
+      "LSM9DS1",    "LM8330",   "DS3231",   "LIS3DH",  "LIS3DSH", "INA219",
+      "SHT3X",      "HDC1080",  "MPU6886",  "BME680",  "AXP202",  "AXP192",
+      "24AA02XEXX", "DS1307"};
 
   ESP_LOGI(TAG, "Starting I2C bus scan...");
 
@@ -86,7 +84,7 @@ void i2c_scan(void) {
 }
 
 // mutexed functions for i2c r/w access
-uint8_t i2c_readBytes(uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len) {
+int i2c_readBytes(uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len) {
   if (I2C_MUTEX_LOCK()) {
 
     uint8_t ret = 0;
@@ -109,12 +107,12 @@ uint8_t i2c_readBytes(uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len) {
     I2C_MUTEX_UNLOCK(); // release i2c bus access
     return ret;
   } else {
-    ESP_LOGW(TAG, "[%0.3f] i2c mutex lock failed", millis() / 1000.0);
+    ESP_LOGW(TAG, "[%0.3f] i2c mutex lock failed", _seconds());
     return 0xFF;
   }
 }
 
-uint8_t i2c_writeBytes(uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len) {
+int i2c_writeBytes(uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len) {
   if (I2C_MUTEX_LOCK()) {
 
     uint8_t ret = 0;
@@ -128,7 +126,7 @@ uint8_t i2c_writeBytes(uint8_t addr, uint8_t reg, uint8_t *data, uint8_t len) {
     I2C_MUTEX_UNLOCK(); // release i2c bus access
     return ret ? ret : 0xFF;
   } else {
-    ESP_LOGW(TAG, "[%0.3f] i2c mutex lock failed", millis() / 1000.0);
+    ESP_LOGW(TAG, "[%0.3f] i2c mutex lock failed", _seconds());
     return 0xFF;
   }
 }

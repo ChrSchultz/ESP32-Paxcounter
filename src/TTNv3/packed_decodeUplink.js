@@ -1,99 +1,114 @@
 // Decoder for device payload encoder "PACKED"
-// copy&paste to TTN Console -> Applications -> PayloadFormat -> Decoder
+// copy&paste to TTN Console V3 -> Applications -> Payload formatters -> Uplink -> Javascript
+// modified for The Things Stack V3 by Caspar Armster, dasdigidings e.V.
 
-function Decoder(bytes, port) {
+function decodeUplink(input) {
+    var data = {};
 
-    var decoded = {};
-
-    if (bytes.length === 0) {
-        return {};
-    }
-
-    if (port === 1) {
+    if (input.fPort === 1) {
         // only wifi counter data, no gps
-        if (bytes.length === 2) {
-            return decode(bytes, [uint16], ['wifi']);
+        if (input.bytes.length === 2) {
+            data = decode(input.bytes, [uint16], ['wifi']);
         }
         // wifi + ble counter data, no gps
-        if (bytes.length === 4) {
-            return decode(bytes, [uint16, uint16], ['wifi', 'ble']);
+        if (input.bytes.length === 4) {
+            data = decode(input.bytes, [uint16, uint16], ['wifi', 'ble']);
+        }
+        // combined wifi + ble + SDS011
+        if (input.bytes.length === 8) {
+            data = decode(input.bytes, [uint16, uint16, uint16, uint16], ['wifi', 'ble', 'PM10', 'PM25']);
         }
         // combined wifi counter and gps data, used by https://opensensemap.org
-        if (bytes.length === 10) {
-            return decode(bytes, [latLng, latLng, uint16], ['latitude', 'longitude', 'wifi']);
+        if (input.bytes.length === 10) {
+            data = decode(input.bytes, [latLng, latLng, uint16], ['latitude', 'longitude', 'wifi']);
         }
         // combined wifi + ble counter and gps data, used by https://opensensemap.org
-        if (bytes.length === 12) {
-            return decode(bytes, [latLng, latLng, uint16, uint16], ['latitude', 'longitude', 'wifi', 'ble']);
+        if (input.bytes.length === 12) {
+            data = decode(input.bytes, [latLng, latLng, uint16, uint16], ['latitude', 'longitude', 'wifi', 'ble']);
         }
         // combined wifi counter and gps data
-        if (bytes.length === 15) {
-            return decode(bytes, [uint16, latLng, latLng, uint8, hdop, altitude], ['wifi', 'latitude', 'longitude', 'sats', 'hdop', 'altitude']);
+        if (input.bytes.length === 15) {
+            data = decode(input.bytes, [uint16, latLng, latLng, uint8, hdop, altitude], ['wifi', 'latitude', 'longitude', 'sats', 'hdop', 'altitude']);
         }
         // combined wifi + ble counter and gps data
-        if (bytes.length === 17) {
-            return decode(bytes, [uint16, uint16, latLng, latLng, uint8, hdop, altitude], ['wifi', 'ble', 'latitude', 'longitude', 'sats', 'hdop', 'altitude']);
+        if (input.bytes.length === 17) {
+            data = decode(input.bytes, [uint16, uint16, latLng, latLng, uint8, hdop, altitude], ['wifi', 'ble', 'latitude', 'longitude', 'sats', 'hdop', 'altitude']);
         }
+        
+        data.pax = 0;
+        if ('wifi' in data) {
+            data.pax += data.wifi;
+        }
+        if ('ble' in data) {
+            data.pax += data.ble;
+        } 
     }
 
-    if (port === 2) {
+    if (input.fPort === 2) {
         // device status data
-        if (bytes.length === 17) {
-            return decode(bytes, [uint16, uptime, uint8, uint32, uint8, uint8], ['voltage', 'uptime', 'cputemp', 'memory', 'reset0', 'reset1']);
+        if (input.bytes.length === 17) {
+            data = decode(input.bytes, [uint16, uptime, uint8, uint32, uint8, uint8], ['voltage', 'uptime', 'cputemp', 'memory', 'reset0', 'reset1']);
         }
     }
 
-    if (port === 3) {
+    if (input.fPort === 3) {
         // device config data      
-        return decode(bytes, [uint8, uint8, int16, uint8, uint8, uint8, uint8, bitmap1, uint8, bitmap2, version], ['loradr', 'txpower', 'rssilimit', 'sendcycle', 'wifichancycle', 'blescantime', 'rgblum', 'flags', 'flag.ens' 'payloadmask', 'version']);
+        data = decode(input.bytes, [uint8, uint8, int16, uint8, uint8, uint8, uint8, bitmap1, bitmap2, version], ['loradr', 'txpower', 'rssilimit', 'sendcycle', 'wifichancycle', 'blescantime', 'rgblum', 'flags', 'payloadmask', 'version']);
     }
 
-    if (port === 4) {
+    if (input.fPort === 4) {
         // gps data      
-        if (bytes.length === 8) {
-            return decode(bytes, [latLng, latLng], ['latitude', 'longitude']);
+        if (input.bytes.length === 8) {
+            data = decode(input.bytes, [latLng, latLng], ['latitude', 'longitude']);
         } else {
-            return decode(bytes, [latLng, latLng, uint8, hdop, altitude], ['latitude', 'longitude', 'sats', 'hdop', 'altitude']);
+            data = decode(input.bytes, [latLng, latLng, uint8, hdop, altitude], ['latitude', 'longitude', 'sats', 'hdop', 'altitude']);
         }
     }
 
-    if (port === 5) {
+    if (input.fPort === 5) {
         // button pressed      
-        return decode(bytes, [uint8], ['button']);
+        data = decode(input.bytes, [uint8], ['button']);
     }
 
-    if (port === 6) {
+    if (input.fPort === 6) {
         // beacon proximity alarm      
-        return decode(bytes, [int8, uint8], ['rssi', 'beacon']);
+        data = decode(input.bytes, [int8, uint8], ['rssi', 'beacon']);
     }
 
-    if (port === 7) {
+    if (input.fPort === 7) {
         // BME680 sensor data     
-        return decode(bytes, [float, pressure, ufloat, ufloat], ['temperature', 'pressure', 'humidity', 'air']);
+        data = decode(input.bytes, [float, pressure, ufloat, ufloat], ['temperature', 'pressure', 'humidity', 'air']);
     }
 
-    if (port === 8) {
+    if (input.fPort === 8) {
         // battery voltage      
-        return decode(bytes, [uint16], ['voltage']);
+        data = decode(input.bytes, [uint16], ['voltage']);
     }
 
-    if (port === 9) {
+    if (input.fPort === 9) {
         // timesync request
-        if (bytes.length === 1) {
-            decoded.timesync_seqno = bytes[0];
-            return decoded;
+        if (input.bytes.length === 1) {
+            data.timesync_seqno = input.bytes[0];
         }
         // epoch time answer
-        if (bytes.length === 5) {
-            return decode(bytes, [uint32, uint8], ['time', 'timestatus']);
+        if (input.bytes.length === 5) {
+            data = decode(input.bytes, [uint32, uint8], ['time', 'timestatus']);
         }
     }
 
-    if (port === 10) {
+    if (input.fPort === 10) {
         // ENS count      
-        return decode(bytes, [uint16], ['ens']);
+        data = decode(input.bytes, [uint16], ['ens']);
     }
+    
+    data.bytes = input.bytes; // comment out if you do not want to include the original payload
+    data.port = input.fPort; // comment out if you do not want to inlude the port
 
+    return {
+        data: data,
+        warnings: [],
+        errors: []
+    };
 }
 
 
